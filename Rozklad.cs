@@ -36,7 +36,7 @@ namespace CentralaTelefoniczna
             //mnozenie w celu uzyskania milisekund
             lewa = (int)((EX - VARX)*1000);
             
-
+            //
             if (lewa < 0)
             {
                 lewa =(int)0;
