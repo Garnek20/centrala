@@ -1,0 +1,22 @@
+# plik dla wiazki centrali
+SYSTEM = CENTRALA
+
+# liczba kanalow na laczu wyjsciowym K
+KANALY = 10
+# liczba miejsc w kolejce w centrali M
+KOLEJKA = 4
+
+# rozklady prawdopodobienstwa
+# na osi x mamy ms
+# LAMBDA to odwrotnosc wartosci sredniej rozkladu
+ROZKLADY = 2
+NAZWA = WYK1
+LAMBDA = 0,0001
+NAZWA = WYK2
+LAMBDA = 0,0001
+
+# strumienie ruchu
+STRUMIENIE = 2
+# opis kazdego strumienia: nazwa, liczba kanalow jakie zajmuja zgloszenia K_n, maksymalny czas oczekiwania T_n [ms], rozklad dla czasu trwania zgloszenia oraz rozklad dla odstepu miedzy zgloszeniami
+NAZWA = ST1 ROZMIAR = 2 CZAS_OCZEKIWANIA = 1000 CZAS_TRWANIA = WYK1 ODSTEP = WYK2
+NAZWA = ST2 ROZMIAR = 3 CZAS_OCZEKIWANIA = 1000 CZAS_TRWANIA = WYK2 ODSTEP = WYK1

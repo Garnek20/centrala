@@ -1,0 +1,6 @@
+C:\Users\Pawel\Documents\Project-AISDE\CentralaTelefoniczna\bin\Debug\CentralaTelefoniczna.exe.config
+C:\Users\Pawel\Documents\Project-AISDE\CentralaTelefoniczna\bin\Debug\CentralaTelefoniczna.exe
+C:\Users\Pawel\Documents\Project-AISDE\CentralaTelefoniczna\bin\Debug\CentralaTelefoniczna.pdb
+C:\Users\Pawel\Documents\Project-AISDE\CentralaTelefoniczna\obj\Debug\CentralaTelefoniczna.csprojResolveAssemblyReference.cache
+C:\Users\Pawel\Documents\Project-AISDE\CentralaTelefoniczna\obj\Debug\CentralaTelefoniczna.exe
+C:\Users\Pawel\Documents\Project-AISDE\CentralaTelefoniczna\obj\Debug\CentralaTelefoniczna.pdb
