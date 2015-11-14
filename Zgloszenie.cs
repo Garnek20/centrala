@@ -6,16 +6,18 @@ using System.Threading.Tasks;
 
 namespace CentralaTelefoniczna
 {
-    class Zgloszenie
+    class Zgloszenie 
     {
         //zmienna okreslajaca zapotrzebowanie kanalowe
         int iloscKanalow;
-        //objekt rozklad
-        Rozklad rozklad;
-        //czas trwania polaczenia
-        int czasTrwaniaPol;
         //maks czas oczekiwania
         int czasOczek;
+
+        public Zgloszenie(int ileKanalow, int czasOczekujacy)
+        {
+            this.iloscKanalow = ileKanalow;
+            this.czasOczek = czasOczekujacy;
+        }
 
         //dopisać zmienne do klasy statystyki
 

@@ -10,21 +10,22 @@ namespace CentralaTelefoniczna
 {
     class Rozklad
     {
-        //czas polaczenia w milisekundach
-        int czasPolaczenia;
-        //czas pomiedzy zgloszeniami
-        int czasPomiedzyZgloszeniami;
-        //sciezka do pliku.txt
-        string sciezka;
-        //parametry do rozkladow lambda
-        double[] lambda;
-        //nazwa poszczegolnego rozkladu
-        string[] nazwaRozkladu;
-        //ilosc rozkladow
-        int iloscRozkladow;
+     
+        private double lambda_;
+
+        public Rozklad(double lambda)
+        {
+            this.lambda_ = lambda;
+        }
+      
+        public double zwrocRozklad(double x)
+        {
+            return -(Math.Log(1-x)/lambda_);
+        }
+
         
 
-        //funkcja generowania czasu polaczenia (jesli ktory == 1) lub czasu pomiedzy zgloszeniami (w pozostalych przypadkach)
+ /*       //funkcja generowania czasu polaczenia (jesli ktory == 1) lub czasu pomiedzy zgloszeniami (w pozostalych przypadkach)
         public int generowanieCzasutrwaniaPolaczenia(double lambda, int ktory)
         {
             double EX, VARX;
@@ -60,7 +61,7 @@ namespace CentralaTelefoniczna
                 return czasPomiedzyZgloszeniami;
             }
         }
-/*
+
         public void wczytywanie(string lokalizacja)
         {
             sciezka = lokalizacja;

@@ -37,7 +37,10 @@ namespace CentralaTelefoniczna
         //liczba kanalow poszczegolnego zgloszenia
         int[] liczbaKanalowZgloszenia;
         #endregion
+        public Symulacja()
+        {
 
+        }
         public void wczytywanie()
         {
             string[] wyrazy;
