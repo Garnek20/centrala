@@ -23,7 +23,7 @@ namespace CentralaTelefoniczna
             element = new Zgloszenie[3*rozmiar];
         }
 
-        public void dodaj(Zgloszenie zglaszam, int ileKanlowDlaZgloszenia, int maksCzasOczekiwaniaZgloszenia)
+        public void dodaj(Zgloszenie zglaszam)
         {
             //Zgloszenie nowy = new Zgloszenie(ileKanlowDlaZgloszenia, maksCzasOczekiwaniaZgloszenia);
             wskaznik ++;

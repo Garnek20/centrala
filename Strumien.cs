@@ -9,15 +9,28 @@ namespace CentralaTelefoniczna
     //klasa definiujaca strumien wejsciowy
     class Strumien
     {
-        //zmienna okreslajaca czas nadejscia 
-        //nastepnego zgloszenia
-        int czasDoNastepnego;
+        #region zmienne
+        //zmienna okreslajaca czas nadejscia nastepnego zgloszenia
+        private double czasDoNastepnego;
         //czas trwania danego polaczenie 
-        int czasPolaczenia;
+        private double czasPolaczenia;
         //liczba wymaganych kanalow dla danego zgloszenia 
-        int liczbaKanalow;
+        private int liczbaKanalow;
         //maksymalny czas oczekiwania na odbior polaczenia
-        int czasOczekiwania;
+        private double czasOczekiwania;
+        #endregion
+
+        public Strumien(double czasDoNastepnego_, double czasPolaczenia_, int liczbaKanalow_, double czasOczekiwania_)
+        {
+            this.czasDoNastepnego = czasDoNastepnego_;
+            this.czasPolaczenia = czasPolaczenia_;
+            this.liczbaKanalow = liczbaKanalow_;
+            this.czasOczekiwania = czasOczekiwania_;
+        }
+        public int liczbaKanalowZwroc() { return liczbaKanalow; }
+        public double czasDoNastepnegoZwroc() { return czasDoNastepnego; }
+        public double czasOczekiwaniaZwroc() { return czasOczekiwania; }
+        public double czasPolaczeniaZwroc() { return czasPolaczenia; }
 
 
 

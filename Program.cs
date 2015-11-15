@@ -17,7 +17,7 @@ namespace CentralaTelefoniczna
           //  pomocnicza = rozklad.generowanieCzasutrwaniaPolaczenia(0.5,1);
            // Console.WriteLine(pomocnicza);
             Symulacja sym = new Symulacja();
-            sym.wczytywanie();
+            sym.symulacja();
 
             Console.ReadLine();
         }

@@ -93,31 +93,15 @@ namespace Kolejka
             }
         }
 
-        public void usun()
+        public D usun()
         {
-            if (wskaznik == 0)
-            {
-                Console.WriteLine("Lista jest pusta, nie moge nic usunac");
-            }
-            else
-            {
-              //lement<D,K> zwroc = element[wskaznik - 1];
-              // element[wskaznik - 1] = null;
+
                wskaznik--;
-               return;
-            }
+               return element[wskaznik].zwrocDane();
+            
             
        }
-/*
-        public IEnumerator<Element<D,K>> GetEnumerator()
-        {
-            for (int index = 0; index < element.Length; index++)
-            {
-                // Yield each day of the week.
-                yield return element[index];
-            }
-        }
-      */
+
         public int zwrocRozmiar()
         {
             return wskaznik;

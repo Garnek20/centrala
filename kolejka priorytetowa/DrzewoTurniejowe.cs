@@ -26,7 +26,7 @@ namespace Kolejka
         //konstruktor z parametrem okreslajacym wielkosc drzewa
         public DrzewoTurniejowe(int wielkosc)
         {
-             wskaznik = 0;
+            wskaznik = 0;
             pojemnosc = wielkosc;
             element = new Element<D, K>[wielkosc];
         }
@@ -34,13 +34,13 @@ namespace Kolejka
         public void dodaj(D dan, K klu)
         {
             wskaznik++;
-            Element<D, K> nowy = new Element<D, K>( dan,  klu);
-            
-            if(wskaznik == 1)
+            Element<D, K> nowy = new Element<D, K>(dan, klu);
+
+            if (wskaznik == 1)
             {
                 element[0] = nowy;
             }
-            if(wskaznik == pojemnosc && pojemnosc < 20*pojemnosc)
+            if (wskaznik == pojemnosc && pojemnosc < 20 * pojemnosc)
             {
                 Element<D, K>[] tmp = new Element<D, K>[2 * pojemnosc];
                 for (int i = 0; i < wskaznik; i++)
@@ -48,10 +48,10 @@ namespace Kolejka
                 element = tmp;
                 pojemnosc *= 2;
 
-                if(element[wskaznik-2].zwrocKlucz().CompareTo(nowy.zwrocKlucz()) < 0)
+                if (element[wskaznik - 2].zwrocKlucz().CompareTo(nowy.zwrocKlucz()) < 0)
                 {
                     Element<D, K> tmp1;
-                    tmp1 = element[wskaznik -1];
+                    tmp1 = element[wskaznik - 1];
                     element[wskaznik - 1] = nowy;
                     nowy = tmp1;
                 }
@@ -60,7 +60,7 @@ namespace Kolejka
                     element[wskaznik - 1] = nowy;
                 }
             }
-            if(wskaznik > 1 && wskaznik < pojemnosc)
+            if (wskaznik > 1 && wskaznik < pojemnosc)
             {
                 element[wskaznik - 1] = nowy;
                 if (element[wskaznik - 2].zwrocKlucz().CompareTo(element[wskaznik - 1].zwrocKlucz()) > 0)
@@ -77,28 +77,24 @@ namespace Kolejka
             }
         }
         //funkcja usuwajaca ostatni element z drzewa turniejowego
-        public void usun()
+        public D usun()
         {
-            if (wskaznik == 0)
-            {
-                Console.WriteLine("Lista jest pusta, nie moge nic usunac");
-            }
-            else
-            {
+
                 wskaznik--;
-                for(int i = 0; i < wskaznik; i++)
+                for (int i = 0; i < wskaznik; i++)
                 {
-                    if (element[i].zwrocKlucz().CompareTo(element[i+1].zwrocKlucz()) > 0)
+                    if (element[i].zwrocKlucz().CompareTo(element[i + 1].zwrocKlucz()) > 0)
                     {
-                        Element<D,K> tmp;
-                        tmp = element[i+1];
-                        element[i+1] = element[i];
+                        Element<D, K> tmp;
+                        tmp = element[i + 1];
+                        element[i + 1] = element[i];
                         element[i] = tmp;
                     }
-                    
-                }
 
-            }
+                }
+                return element[wskaznik].zwrocDane();
+
+            
         }
         //funkcja zwracajaca rozmiar drzewa
         public int zwrocRozmiar()
@@ -115,6 +111,6 @@ namespace Kolejka
         {
             return element[i].zwrocDane();
         }
-        
+
     }
 }

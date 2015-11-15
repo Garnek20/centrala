@@ -12,10 +12,12 @@ namespace CentralaTelefoniczna
     {
      
         private double lambda_;
+        private string nazwa_;
 
-        public Rozklad(double lambda)
+        public Rozklad(double lambda, string nazwa)
         {
             this.lambda_ = lambda;
+            this.nazwa_ = nazwa;
         }
       
         public double zwrocRozklad(double x)
