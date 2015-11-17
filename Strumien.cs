@@ -18,6 +18,20 @@ namespace CentralaTelefoniczna
         private int liczbaKanalow;
         //maksymalny czas oczekiwania na odbior polaczenia
         private double czasOczekiwania;
+
+        public Strumien()
+        {
+            czasDoNastepnego = 0;
+            czasOczekiwania = 0;
+            czasPolaczenia = 0;
+            liczbaKanalow = 0;
+        }
+
+        public double czas_do_nastepnego { get { return czasDoNastepnego; } set { czasDoNastepnego = value; } }
+        public double czas_polaczenia { get { return czasPolaczenia; } set{czasPolaczenia = value;} }
+        public int liczba_kanalow { get { return liczbaKanalow; } set { liczbaKanalow = value; } }
+        public double czas_oczekiwania { get { return czasOczekiwania; } set { czasOczekiwania = value; } }
+
         #endregion
 
         public Strumien(double czasDoNastepnego_, double czasPolaczenia_, int liczbaKanalow_, double czasOczekiwania_)
@@ -31,6 +45,8 @@ namespace CentralaTelefoniczna
         public double czasDoNastepnegoZwroc() { return czasDoNastepnego; }
         public double czasOczekiwaniaZwroc() { return czasOczekiwania; }
         public double czasPolaczeniaZwroc() { return czasPolaczenia; }
+
+        
 
 
 

@@ -9,7 +9,7 @@ namespace CentralaTelefoniczna
     class Fifo
     {
         //wskaznik do poruszania się po liście 
-        private int wskaznik { get; set; } 
+        private int wskaznik { get; set; }
         //tablica elementow z elementami struktury
         private Zgloszenie[] element { get; set; }
         //wielkosc tablicy
@@ -20,19 +20,19 @@ namespace CentralaTelefoniczna
         {
             wskaznik = 0;
             pojemnosc = rozmiar;
-            element = new Zgloszenie[3*rozmiar];
+            element = new Zgloszenie[3 * rozmiar];
         }
 
         public void dodaj(Zgloszenie zglaszam)
         {
             //Zgloszenie nowy = new Zgloszenie(ileKanlowDlaZgloszenia, maksCzasOczekiwaniaZgloszenia);
-            wskaznik ++;
-            if(pojemnosc ==  0)
+            wskaznik++;
+            if (pojemnosc == 0)
             {
                 throw new InvalidOperationException("Kolejka nie ma miejsca, pojemnosc = 0 :-(");
             }
-        
-            if(wskaznik == 1)
+
+            if (wskaznik == 1)
             {
                 element[0] = zglaszam;
                 return;
@@ -40,7 +40,7 @@ namespace CentralaTelefoniczna
 
             if (wskaznik > 1 && wskaznik < pojemnosc)
             {
-                 element[wskaznik - 1] = zglaszam;
+                element[wskaznik - 1] = zglaszam;
             }
             else
             {
@@ -56,18 +56,38 @@ namespace CentralaTelefoniczna
             }
             else
             {
-               wskaznik--;
-               return element[wskaznik];
+                wskaznik--;
+                return element[wskaznik];
             }
-            
-       }
+
+        }
 
         public int zwrocRozmiar()
         {
             return wskaznik;
         }
 
-        
+        public Zgloszenie zwrocElementKolejki(int wsk)
+        { return element[wsk]; }
+
+        public void usunDanyElement(int wsk)
+        {
+            Zgloszenie[] zgloszenieNowe = new Zgloszenie[3 * pojemnosc];
+            int j = 0;
+
+            while (j != wsk)
+            {
+                zgloszenieNowe[j] = element[j];
+                j++;
+            }
+            while (j != pojemnosc - 1)
+            {
+                zgloszenieNowe[j] = element[wsk + 1];
+                j++;
+            }
+            element = zgloszenieNowe;
+            wskaznik--;
+            
+        }
     }
 }
-

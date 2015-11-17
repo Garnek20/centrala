@@ -92,7 +92,7 @@ namespace Kolejka
                     }
 
                 }
-                return element[wskaznik].zwrocDane();
+                return element[wskaznik-1].zwrocDane();
 
             
         }

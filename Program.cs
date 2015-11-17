@@ -11,11 +11,6 @@ namespace CentralaTelefoniczna
     {
         static void Main(string[] args)
         {
-            int pomocnicza;
-           // Rozklad rozklad = new Rozklad();
-            
-          //  pomocnicza = rozklad.generowanieCzasutrwaniaPolaczenia(0.5,1);
-           // Console.WriteLine(pomocnicza);
             Symulacja sym = new Symulacja();
             sym.symulacja();
 

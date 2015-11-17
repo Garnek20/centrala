@@ -54,35 +54,50 @@ namespace CentralaTelefoniczna
             int liczbaOdrzuconych;
             //ilosc odwiedzen systemu
             int iloscOdwiedzenSystemu;
+            //zgloszenia do systemu
+            Zgloszenie[] zgloszenie;
+
             #endregion
 
             //konstruktor domyslny
             public Symulacja()
             {
+                
                 //wczytywanie wszystkich parametrow
                 wczytywanie();
+           
                 //inicjacja listy zgloszen o elementach Zgloszenie i kluczu czasu przyjscia ( wzgledem tego jest sortowana)
                 lista = new Kolejka.DrzewoTurniejowe<Zgloszenie,TimeSpan>();
                 aktualnyCzas = new TimeSpan();
                 czasSymulacji = new TimeSpan();
-                Random random = new Random();
-                for(int x = 0; x < 300; x++)
+                strumien = new Strumien[liczbaStrumieni];
+                przypisanieRozkladow();
+                
+                for(int i = 0; i < liczbaStrumieni; i++)
                 {
-                     
-                     przypisanieRozkladow();
+                    strumien[i] = new Strumien(czasPomiedzyZgloszeniami[i], czasPolaczenia[i], liczbaKanalowZgloszenia[i], maxCzasOczekiwania[i]);
+                 
+                }
+
+                
+
+                Random random = new Random();
+                for(int x = 0; x < 30; x++)
+                {
+                    
                         
                     for (int i = 0; i<liczbaStrumieni; i++)
                     {                   
                         if( x % liczbaStrumieni == 0)
                         {
-                            Zgloszenie zgloszenie = new Zgloszenie(liczbaKanalowZgloszenia[x%liczbaStrumieni],maxCzasOczekiwania[x%liczbaStrumieni],czasPolaczenia[x%liczbaStrumieni]);
+                            Zgloszenie zgloszenie = new Zgloszenie();
                             lista.dodaj(zgloszenie, aktualnyCzas);
                             TimeSpan nowy = new TimeSpan(0,0,0,0,random.Next(0, 10));
                             aktualnyCzas = aktualnyCzas + nowy;
                         }
                         else
                         {
-                            Zgloszenie zgloszenie = new Zgloszenie(liczbaKanalowZgloszenia[x % liczbaStrumieni], maxCzasOczekiwania[x % liczbaStrumieni], czasPolaczenia[x % liczbaStrumieni]);
+                            Zgloszenie zgloszenie = new Zgloszenie();
                             lista.dodaj(zgloszenie, aktualnyCzas);
                             TimeSpan nowy = new TimeSpan(0, 0, 0, 0, random.Next(0, 10));
                             aktualnyCzas = aktualnyCzas + nowy;
@@ -90,7 +105,7 @@ namespace CentralaTelefoniczna
                     }
                 }
             }
-            //metoda wczytujaca dane z pliku
+            
             public void symulacja()
             {
                 double temp;
@@ -99,42 +114,51 @@ namespace CentralaTelefoniczna
                 czasSymulacji = TimeSpan.FromMilliseconds(temp);
                 aktualnyCzas = new TimeSpan(0,0,0,0,0);
 
-                int k, liczbaKanalow_temp = liczbaKanalow;
+                int k, liczbaKanalow_temp = liczbaKanalow, indeksZgloszeniaWsystemie, biezacyRozmiarFifo;
                 TimeSpan[] czasWsystemie =new TimeSpan[liczbaKanalow];
                 TimeSpan[] czasWkolejce = new TimeSpan[rozmiarKolejki];
-                TimeSpan odstep = new TimeSpan(0,0,0,0,0);
-                strumien = new Strumien[liczbaStrumieni];
-                Zgloszenie[] zgloszenie = new Zgloszenie[liczbaStrumieni];
+                TimeSpan[] odstep = new TimeSpan[liczbaStrumieni];
+              //  strumien = new Strumien[liczbaStrumieni];
+                zgloszenie = new Zgloszenie[liczbaStrumieni];
+                Zgloszenie[] zgloszenieWsystemie = new Zgloszenie[liczbaKanalow];
+                Zgloszenie zgloszenieWfifo;
                 kolejka = new Fifo(rozmiarKolejki);
                 liczbaOdrzuconych = 0;
                 iloscOdwiedzenSystemu = 0;
+                indeksZgloszeniaWsystemie = 0;
 
                 for (int i = 0; i < liczbaStrumieni; i++)
                 {
-                    strumien[i] = new Strumien(czasPomiedzyZgloszeniami[i],czasPolaczenia[i], liczbaKanalowZgloszenia[i],maxCzasOczekiwania[i]);
+                    odstep[i] =  TimeSpan.FromMilliseconds(0.0);
                 }
+
+               
 
                 do
                 {
+                   
 
                     for (int i = 0; i < liczbaStrumieni; i++)
                     {
-                        zgloszenie[i] = lista.usun();
+                        Zgloszenie zgl = new Zgloszenie(); //
+                        lista.dodaj(zgl, aktualnyCzas);
 
-                        if (zgloszenie[i].iloscKanalowZwroc() == strumien[i].liczbaKanalowZwroc() && odstep == TimeSpan.FromMilliseconds(0.0))
+                        if(odstep[i] == TimeSpan.FromMilliseconds(0.0))
                         {
+                            zgloszenie[i] = lista.usun();
+                            zgloszenie[i].ilosc_kanalow = strumien[i].liczbaKanalowZwroc();
+                            zgloszenie[i].czas_trwania = strumien[i].czasPolaczeniaZwroc();
+
+        
                             czasPomiedzyZgloszeniami[i] = strumien[i].czasDoNastepnegoZwroc();
-                            odstep = TimeSpan.FromMilliseconds(czasPomiedzyZgloszeniami[i]);
-                        }
-                    }
-                           //sprawdzamy zawartosc kolejki
+                            odstep[i] = TimeSpan.FromMilliseconds(czasPomiedzyZgloszeniami[i]);
+
+                            //sprawdzamy zawartosc kolejki
                             if (kolejka.zwrocRozmiar() == 0)
                                 k = 1;
                             else if (kolejka.zwrocRozmiar() == rozmiarKolejki) k = 2;
                             else k = 3;
-                           
-                        for(int i = 0; i < liczbaStrumieni; i++)
-                        {
+
                             switch (k)
                             {
                                 case 1: //przypadek, gdy kolejka jest pusta (jesli kanaly wolne to wrzucamy, jesli nie to do kolejki)
@@ -142,28 +166,41 @@ namespace CentralaTelefoniczna
                                     {
                                         iloscOdwiedzenSystemu++;
                                         liczbaKanalow_temp = liczbaKanalow_temp - zgloszenie[i].iloscKanalowZwroc();
-                                        czasWsystemie[i] = TimeSpan.FromMilliseconds(czasPolaczenia[i]);
+                                        
+                                        while(zgloszenieWsystemie[indeksZgloszeniaWsystemie] != null)
+                                        {
+                                            indeksZgloszeniaWsystemie++;
+                                        }
+                                        zgloszenieWsystemie[indeksZgloszeniaWsystemie] = zgloszenie[i];
+                                        czasWsystemie[i] = TimeSpan.FromMilliseconds(zgloszenie[i].czas_trwania);
                                     }
                                     else
                                     {
                                         kolejka.dodaj(zgloszenie[i]);
-                                        czasWkolejce[i] = TimeSpan.FromMilliseconds(zgloszenie[i].czasOczekiwaniaZwroc());
+                                        czasWkolejce[i] = TimeSpan.FromMilliseconds(zgloszenie[i].maksCzasOczekiwaniaZwroc());
                                     }
                                     break;
                                 case 2: //kolejka pelna, zgloszenie odrzucone
                                     liczbaOdrzuconych++;
-                                    zgloszenie[i] = null;
+                            //      zgloszenie[i] = null;
                                     break;
                                 case 3: //wrzucanie do bufora
                                     kolejka.dodaj(zgloszenie[i]);
-                                    czasWkolejce[i] = TimeSpan.FromMilliseconds(zgloszenie[i].czasOczekiwaniaZwroc());
+                                    czasWkolejce[i] = TimeSpan.FromMilliseconds(zgloszenie[i].maksCzasOczekiwaniaZwroc());
                                     break;
 
                             }
+
+
                         }
+
+                    }
+  // nastepnym etapem jest porownywanie najpierw czasow odstepu na strumieniach, potem czasow trwania polaczenia w systemie, porownania najmniejszych
+  // wynikow ze soba, uzyskanym wynikiem jest najkrotszy czas od danej chwili czasu, ktory bedzie wyznacznikiem nastepnego kroku symulacji
+                           
                     //porownywanie czasow
                     double nastepnyEtap;
-                    for (int i = 0; i < liczbaStrumieni; i ++) //porownanie czasow odstepu
+                    for (int i = 0; i < liczbaStrumieni - 1; i ++) //porownanie czasow odstepu
                     {
                         if (liczbaStrumieni > 0)
                         {
@@ -177,7 +214,7 @@ namespace CentralaTelefoniczna
                         
                     }
                     double nastepnyEtap2;
-                    for (int i = 0; i < iloscOdwiedzenSystemu; i++) //porownanie czasow trwania polaczenia w systemie
+                    for (int i = 0; i < iloscOdwiedzenSystemu - 1; i++) //porownanie czasow trwania polaczenia w systemie
                     {
                         if (iloscOdwiedzenSystemu > 0)
                         {
@@ -189,19 +226,88 @@ namespace CentralaTelefoniczna
                             }
                         }
                     }
-                    
+
+                    //w przypadku, gdy czas odstepu, ktoregos ze strumieni, jest najkrotszym to zwalniane jest dany strumien,
+                    //a od reszty czasow odejmujemy dany skok czasowy
                     if(czasPomiedzyZgloszeniami[liczbaStrumieni -1].CompareTo(czasPolaczenia[iloscOdwiedzenSystemu - 1]) < 0)
                     {
                         TimeSpan temp1;
                         temp1 = aktualnyCzas;
                         aktualnyCzas = TimeSpan.FromMilliseconds(czasPomiedzyZgloszeniami[liczbaStrumieni - 1]);
                         aktualnyCzas = aktualnyCzas + temp1;
-                        //na tym stanelismy
+                        Zgloszenie doWyrzucenia;
+
+                        for (int i = 0; i <liczbaStrumieni;i++)
+                        {
+                            czasPomiedzyZgloszeniami[i] = czasPomiedzyZgloszeniami[i] - czasPomiedzyZgloszeniami[liczbaStrumieni - 1];
+                        }
+                        if (kolejka.zwrocRozmiar() != 0)
+                        {
+                            for (int i = 0; i < kolejka.zwrocRozmiar(); i++)
+                            {
+                                doWyrzucenia = kolejka.zwrocElementKolejki(i);
+                                if (doWyrzucenia.maksCzasOczekiwaniaZwroc() >= czasPomiedzyZgloszeniami[liczbaStrumieni - 1])
+                                {   
+                                    liczbaOdrzuconych++;
+                                    kolejka.usunDanyElement(i);
+                                }
+                                else
+                                {
+                                    czasWkolejce[i] = TimeSpan.FromMilliseconds(doWyrzucenia.maksCzasOczekiwaniaZwroc()) - TimeSpan.FromMilliseconds(czasPomiedzyZgloszeniami[liczbaStrumieni -1]);
+                                    
+                                }
+                            }
+                        }
+                    }
+                    else //przypadek, gdy najkrtoszym czasem jest jeden z czasow trwania obslugi polaczenia na kanalach
+                        //wtedy dane zgloszenie konczy transmisje i, jezeli liczba kanalow zgloszenia ostatniego w kolejce
+                        //jest niewieksza niz ilosc kanalow dostepnych, wtedy dane zgloszenie obslugujemy i zwalniamy miejsce w kolejce
+                    {
+                        TimeSpan temp2;
+                        temp2 = aktualnyCzas;
+                        aktualnyCzas = TimeSpan.FromMilliseconds(czasPolaczenia[iloscOdwiedzenSystemu - 1]);
+                        aktualnyCzas = aktualnyCzas + temp2;
+                        
+
+                        for (int i = 0; i < iloscOdwiedzenSystemu; i++)
+                        {
+                            if (czasWsystemie[i] != TimeSpan.FromMilliseconds(0.0))
+                            czasWsystemie[i] = czasWsystemie[i] - TimeSpan.FromMilliseconds(czasPolaczenia[iloscOdwiedzenSystemu - 1]);
+                        }
+
+                        for (int j = 0; j <indeksZgloszeniaWsystemie; j++)
+                        {
+                            if(zgloszenieWsystemie[j].czasTrwaniaZwroc() >= czasPolaczenia[iloscOdwiedzenSystemu - 1])
+                            {
+                                //czas do statystyki sredniego czasu obslugi dopisac
+                                liczbaKanalow_temp = liczbaKanalow_temp + zgloszenieWsystemie[j].iloscKanalowZwroc();
+                                biezacyRozmiarFifo =  kolejka.zwrocRozmiar();
+                                if (biezacyRozmiarFifo != 0)
+                                {
+                                    zgloszenieWfifo = kolejka.zwrocElementKolejki(biezacyRozmiarFifo);
+                                    if (zgloszenieWfifo.iloscKanalowZwroc() <= liczbaKanalow_temp)
+                                    {
+                                        indeksZgloszeniaWsystemie = 0;
+                                        while (zgloszenieWsystemie[indeksZgloszeniaWsystemie] != null)
+                                        {
+                                            indeksZgloszeniaWsystemie++;
+                                        }
+                                        zgloszenieWsystemie[indeksZgloszeniaWsystemie] = kolejka.usun();
+                                        liczbaKanalow_temp = liczbaKanalow_temp - zgloszenieWsystemie[indeksZgloszeniaWsystemie].iloscKanalowZwroc();
+                                    }
+                                }
+                                indeksZgloszeniaWsystemie = 0;
+                                
+                            }
+                        }
+                        
+
                     }
                         
                 }while(czasSymulacji >= aktualnyCzas);
+                Console.WriteLine("{0} , {1}", liczbaOdrzuconych, iloscOdwiedzenSystemu);
             }
-
+            //metoda wczytujaca dane z pliku
             public void wczytywanie()
             {
                 string[] wyrazy;

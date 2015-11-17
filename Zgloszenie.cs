@@ -10,28 +10,34 @@ namespace CentralaTelefoniczna
     {
         //zmienna okreslajaca zapotrzebowanie kanalowe
         private int iloscKanalow;
-        //maks czas oczekiwania
-        private double czasOczek;
+
         //czas polaczenia danego Zgloszenia
-        private double czas_trwania;
+        private double czasTrwania;
 
+        //maksymalny czas oczekiwania danego zgloszenia w FIFO
+        private double maksCzasOczekiwania;
 
-        public Zgloszenie(int ileKanalow, double czasOczekujacy, double czasTrwania)
+        public double maks_czas_oczekiwania { get { return maksCzasOczekiwania; } set { maksCzasOczekiwania = value; } }
+        public int ilosc_kanalow { get { return iloscKanalow; } set { iloscKanalow = value; } }
+        public double czas_trwania { get { return czasTrwania; } set { czasTrwania = value; } }
+
+        //konstruktor domysny
+        public Zgloszenie()
         {
-            this.iloscKanalow = ileKanalow;
-            this.czasOczek = czasOczekujacy;
-            this.czas_trwania = czasTrwania;
+            iloscKanalow = 0;
+            czasTrwania = 0;
+            maksCzasOczekiwania = 0;
         }
-
         public int iloscKanalowZwroc()
         {
             return iloscKanalow;
         }
-        public double czasOczekiwaniaZwroc()
-        { return czasOczek; }
 
         public double czasTrwaniaZwroc()
         { return czas_trwania; }
+
+        public double maksCzasOczekiwaniaZwroc()
+        { return maksCzasOczekiwania; }
         //dopisać zmienne do klasy statystyki
 
 
