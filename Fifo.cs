@@ -44,6 +44,7 @@ namespace CentralaTelefoniczna
             }
             else
             {
+                wskaznik--;
                 return;
             }
         }
