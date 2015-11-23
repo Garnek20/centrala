@@ -16,7 +16,7 @@ namespace CentralaTelefoniczna
         //srednia zajetosc kolejki
         private double zajetoscKolejki;
         //sredni czas obslugi systemu (pakietow, tylko pomyslnie obsluzonych)
-        private double sredniCzasObslugi;
+        private TimeSpan sredniCzasObslugi;
         //licznik zajetosci
         private int counterZajetosciWiazki;
         //licznik zajetosci kolejki
@@ -31,7 +31,7 @@ namespace CentralaTelefoniczna
             pstwoOdrzucenia = 0;
             zajetoscWiazki = 0;
             zajetoscKolejki = 0;
-            sredniCzasObslugi = 0;
+            sredniCzasObslugi = TimeSpan.Zero;
             counterZajetosciWiazki = 0;
             counterZajetosciKolejki = 0;
             counterObslugi = 0;
@@ -42,48 +42,50 @@ namespace CentralaTelefoniczna
         }
         public double pstwoOdrzuceniaZwroc() { return pstwoOdrzucenia; }
        
-        public void zwiekszZajetoscWiazki(double aktualnaZajetosc)
+        public void zwiekszZajetoscWiazki()
         {
             counterZajetosciWiazki++;
-            zajetoscWiazki +=aktualnaZajetosc;
+
         }
-        public double zajetoscWiazkiZwroc() {
+        public double zajetoscWiazkiZwroc(int liczbaZgloszenWsystemie) 
+        {
             if (counterZajetosciWiazki != 0)
             {
-                zajetoscWiazki = zajetoscWiazki / counterZajetosciWiazki;
+                zajetoscWiazki = (double)counterZajetosciWiazki / liczbaZgloszenWsystemie;
                 return zajetoscWiazki;
             }
             else
                 return 0;
         }
 
-        public void zwiekszZajetoscKolejki(double aktualnaZajetosc)
+        public void zwiekszZajetoscKolejki()
         {
             counterZajetosciKolejki++;
-            zajetoscKolejki += aktualnaZajetosc;
         }
-        public double zajetoscKolejkiZwroc()
+        public double zajetoscKolejkiZwroc(int liczbaZgloszenWKolejce)
         {
             if (counterZajetosciKolejki != 0)
             {
-                zajetoscKolejki = zajetoscKolejki / counterZajetosciKolejki;
+                zajetoscKolejki = (double)counterZajetosciKolejki/liczbaZgloszenWKolejce;
                 return zajetoscKolejki;
             }
             else
                 return 0;
         }
 
-        public void zwiekszCzasObslugi(double aktualnyCzasObslugi)
+        public void zwiekszCzasObslugi(TimeSpan aktualnyCzasObslugi)
         {
             counterObslugi++;
-            sredniCzasObslugi += aktualnyCzasObslugi;
+            sredniCzasObslugi = sredniCzasObslugi + aktualnyCzasObslugi;
         }
         public double sredniCzasObslugiZwroc()
         {
+            double temp;
             if (counterObslugi != 0)
             {
-                sredniCzasObslugi = sredniCzasObslugi / counterObslugi;
-                return sredniCzasObslugi;
+                temp = sredniCzasObslugi.TotalMilliseconds;
+                temp = temp/ counterObslugi;
+                return temp;
             }
             else
                 return 0;

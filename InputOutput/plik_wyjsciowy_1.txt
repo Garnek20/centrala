@@ -1,0 +1,4 @@
+Srednia zajetosc lacza wynosi :19,2475940507437%
+Srednia zajetosc kolejki :  46,3196421309475%
+Prawdopodobienstwo odrzucenia zgloszenia  :  40,0784570120955%
+Sredni czas obslugi  :  7166,78652668416ms

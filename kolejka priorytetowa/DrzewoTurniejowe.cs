@@ -60,19 +60,22 @@ namespace Kolejka
                     element[wskaznik - 1] = nowy;
                 }
             }
-            if (wskaznik > 1 && wskaznik < pojemnosc)
+            else
             {
-                element[wskaznik - 1] = nowy;
-                if (element[wskaznik - 2].zwrocKlucz().CompareTo(element[wskaznik - 1].zwrocKlucz()) > 0)
-                {
-                    Element<D, K> tmp;
-                    tmp = element[wskaznik - 2];
-                    element[wskaznik - 2] = element[wskaznik - 1];
-                    element[wskaznik - 1] = tmp;
-                }
-                else
+                if (wskaznik != 1)
                 {
                     element[wskaznik - 1] = nowy;
+                    if (element[wskaznik - 2].zwrocKlucz().CompareTo(element[wskaznik - 1].zwrocKlucz()) > 0)
+                    {
+                        Element<D, K> tmp;
+                        tmp = element[wskaznik - 2];
+                        element[wskaznik - 2] = element[wskaznik - 1];
+                        element[wskaznik - 1] = tmp;
+                    }
+                    else
+                    {
+                        element[wskaznik - 1] = nowy;
+                    }
                 }
             }
         }

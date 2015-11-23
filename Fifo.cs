@@ -9,11 +9,11 @@ namespace CentralaTelefoniczna
     class Fifo
     {
         //wskaznik do poruszania się po liście 
-        private int wskaznik { get; set; }
+        private int wskaznik;
         //tablica elementow z elementami struktury
-        private Zgloszenie[] element { get; set; }
+        private Zgloszenie[] element;
         //wielkosc tablicy
-        private int pojemnosc { get; set; }
+        private int pojemnosc;
 
         //konstruktor 
         public Fifo(int rozmiar) //wczytywany z pliku rozmiar kolejki w centrali
@@ -29,7 +29,8 @@ namespace CentralaTelefoniczna
             wskaznik++;
             if (pojemnosc == 0)
             {
-                throw new InvalidOperationException("Kolejka nie ma miejsca, pojemnosc = 0 :-(");
+                wskaznik--;
+                return;
             }
 
             if (wskaznik == 1)
@@ -67,7 +68,7 @@ namespace CentralaTelefoniczna
         {
             return wskaznik;
         }
-
+            
         public Zgloszenie zwrocElementKolejki(int wsk)
         { return element[wsk]; }
 

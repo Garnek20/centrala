@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Globalization;
-//using System.DateTime;
+
 
 
 
@@ -19,7 +19,7 @@ namespace CentralaTelefoniczna
             //czas pomiedzy zgloszeniami
             double[] czasPomiedzyZgloszeniami;
             //sciezka do pliku.txt
-            string sciezka;
+            string sciezkaWejsciowa;
             //parametry do rozkladow lambda
             double[] lambda;
             //nazwa poszczegolnego rozkladu
@@ -58,8 +58,21 @@ namespace CentralaTelefoniczna
             int liczbaZgloszen;
             //ilosc odwiedzen systemu
             int iloscOdwiedzenSystemu;
+            //liczba wszystkich zgloszen, ktore sie dostaly do wiazki
+            int liczbaZgloszenNaWiazce;
             //zgloszenia do systemu
             Zgloszenie[] zgloszenie;
+            //ilosc zgloszen dodanych do FIFO
+            int iloscZgloszenWFifo;
+            //sciezka do pliku z wynikami
+            string sciezkaWyjsciowa;
+            double[] lambdyPomocnicze1,lambdyPomocnicze2;
+            
+            //parametry statystyczne
+            double sredniaZajetoscWiazki;
+            double sredniaZajetoscKolejki;
+            double prawdopodobienstwoOdrzucenia;
+            double sredniCzasObslugi;
             #endregion
 
             //konstruktor domyslny
@@ -68,7 +81,7 @@ namespace CentralaTelefoniczna
                 
                 //wczytywanie wszystkich parametrow
                 wczytywanie();
-                //inicjacja listy zgloszen o elementach Zgloszenie i kluczu czasu przyjscia ( wzgledem tego jest sortowana)
+                //inicjacje parametrow
                 lista = new Kolejka.DrzewoTurniejowe<Zgloszenie,TimeSpan>();
                 aktualnyCzas = new TimeSpan();
                 czasSymulacji = new TimeSpan();
@@ -80,12 +93,10 @@ namespace CentralaTelefoniczna
                 {
                     strumien[i] = new Strumien(czasPomiedzyZgloszeniami[i], czasPolaczenia[i], liczbaKanalowZgloszenia[i], maxCzasOczekiwania[i]);
                 }
-                              
+                            
                 Random random = new Random();
                 for(int x = 0; x < 2; x++)
-                {
-                    
-                        
+                {    
                     for (int i = 0; i<liczbaStrumieni; i++)
                     {                   
                         if( x % liczbaStrumieni == 0)
@@ -131,10 +142,13 @@ namespace CentralaTelefoniczna
                 iloscOdwiedzenSystemu = 0;
                 indeksZgloszeniaWsystemie = 0;
                 liczbaZgloszen=0;
+                iloscZgloszenWFifo = 0;
+                liczbaZgloszenNaWiazce = 0;
 
                 do
                 {
                     
+
                     przypisanieRozkladow();
                     for (int i = 0; i < liczbaStrumieni; i++)
                     {
@@ -143,9 +157,9 @@ namespace CentralaTelefoniczna
                     for (int i = 0; i < liczbaStrumieni; i++)
                     {
                         czasPolaczenia[i] = 0;
-                        Zgloszenie zgl = new Zgloszenie(); //
+                        Zgloszenie zgl = new Zgloszenie();
                         lista.dodaj(zgl, aktualnyCzas);
-
+                        
                         if(odstep[i] == TimeSpan.Zero)
                         {
                             liczbaZgloszen++;
@@ -168,23 +182,40 @@ namespace CentralaTelefoniczna
                                 case 1: //przypadek, gdy kolejka jest pusta (jesli kanaly wolne to wrzucamy, jesli nie to do kolejki)
                                     if (liczbaKanalow_temp >= zgloszenie[i].iloscKanalowZwroc())
                                     {
-                                        st++;
-                                        iloscOdwiedzenSystemu++;
+                                        iloscOdwiedzenSystemu++;//zmienna do statystyki
                                         liczbaKanalow_temp = liczbaKanalow_temp - zgloszenie[i].iloscKanalowZwroc();
-                                         indeksZgloszeniaWsystemie = 0;
-                                        while(liczbaKanSystem[indeksZgloszeniaWsystemie] != 0)
+                                        indeksZgloszeniaWsystemie = 0;
+                                        while (liczbaKanSystem[indeksZgloszeniaWsystemie] != 0)
                                         {
                                             indeksZgloszeniaWsystemie++;
                                         }
                                         liczbaKanSystem[indeksZgloszeniaWsystemie] = zgloszenie[i].iloscKanalowZwroc();
                                         czasWsystemie[indeksZgloszeniaWsystemie] = TimeSpan.FromMilliseconds(zgloszenie[i].czas_trwania); ///sprawdzic
                                         czasPolaczenia[indeksZgloszeniaWsystemie] = zgloszenie[i].czasTrwaniaZwroc();//?
-                                        
+                                        statystyki.zwiekszCzasObslugi(czasWsystemie[indeksZgloszeniaWsystemie]);
+                                        liczbaZgloszenNaWiazce++; //zmienna do statystyki
+                                        st++;
                                     }
                                     else
                                     {
+                                        if(st != 0)
+                                        {
+                                            statystyki.zwiekszZajetoscWiazki();
+                                            st = 0;
+                                        }
                                         kolejka.dodaj(zgloszenie[i]);
-                                        czasWkolejce[kolejka.zwrocRozmiar() - 1] = TimeSpan.FromMilliseconds(zgloszenie[i].maksCzasOczekiwaniaZwroc());
+                                        if (kolejka.zwrocRozmiar() != 0)
+                                        {
+                                            
+                                            iloscZgloszenWFifo++;//zmienna do statystyki
+                                            czasWkolejce[kolejka.zwrocRozmiar() - 1] = TimeSpan.FromMilliseconds(zgloszenie[i].maksCzasOczekiwaniaZwroc());
+                                            if (kolejka.zwrocRozmiar() == rozmiarKolejki - 1)
+                                            {
+                                               statystyki.zwiekszZajetoscKolejki();
+                                            }
+                                        }
+                                        else
+                                            liczbaOdrzuconych++;//zmienna do statystyki
                                     }
                                     break;
                                 case 2: //kolejka pelna, zgloszenie odrzucone
@@ -192,13 +223,17 @@ namespace CentralaTelefoniczna
                                     break;
                                 case 3: //wrzucanie do bufora
                                     kolejka.dodaj(zgloszenie[i]);
-                                    kolejkaCzas[i] = zgloszenie[i].maksCzasOczekiwaniaZwroc();
-                                    czasWkolejce[i] = TimeSpan.FromMilliseconds(zgloszenie[i].maksCzasOczekiwaniaZwroc());
-                                    if(kolejka.zwrocRozmiar() == rozmiarKolejki)
+                                    if (kolejka.zwrocRozmiar() != 0)
                                     {
-
-                                        statystyki.zwiekszZajetoscKolejki(kolejkaCzas[i]);
+                                        iloscZgloszenWFifo++;
+                                        czasWkolejce[i] = TimeSpan.FromMilliseconds(zgloszenie[i].maksCzasOczekiwaniaZwroc());
+                                        if (kolejka.zwrocRozmiar() == rozmiarKolejki - 1)
+                                        {
+                                           statystyki.zwiekszZajetoscKolejki();
+                                        }
                                     }
+                                    else
+                                        liczbaOdrzuconych++;
                                     break;
                             }
                         }
@@ -302,7 +337,7 @@ namespace CentralaTelefoniczna
                         {
                             doWyrzucenia = kolejka.zwrocElementKolejki(kolejka.zwrocRozmiar() - 1);
                             wyrzuc = TimeSpan.FromMilliseconds(doWyrzucenia.maksCzasOczekiwaniaZwroc());
-                               
+
                                 if (wyrzuc <= nastepnyEtap)
                                 {   
                                     liczbaOdrzuconych++;
@@ -311,8 +346,7 @@ namespace CentralaTelefoniczna
                                 else
                                 {
                                     for (int i = 0; i < kolejka.zwrocRozmiar(); i++)
-                                    {
-                                      //  kolejkaCzas[i] = 
+                                    { 
                                         czasWkolejce[i] = TimeSpan.FromMilliseconds(doWyrzucenia.maksCzasOczekiwaniaZwroc()) - nastepnyEtap;
                                     }
                                 }
@@ -344,9 +378,7 @@ namespace CentralaTelefoniczna
                             for (int j = 0; j < indeksZgloszeniaWsystemie + 1; j++)
                             {
                                 if (czasWsystemie[j] == TimeSpan.Zero)
-                                {
-                                    //czas do statystyki sredniego czasu obslugi dopisac
-
+                                {                                    
                                     if (j != indeksZgloszeniaWsystemie)
                                     {
                                         for (int i = 0; i < indeksZgloszeniaWsystemie; i++)
@@ -384,7 +416,6 @@ namespace CentralaTelefoniczna
                                 zgloszenieWfifo = kolejka.zwrocElementKolejki(biezacyRozmiarFifo - 1);
                                 if (zgloszenieWfifo.iloscKanalowZwroc() <= liczbaKanalow_temp)// jesli element kolejki ma zapotrzebowanie kanalowe niewieksze od zwolnionego, to zostaje obsluzony przez system
                                 {
-                                    st++;
                                     zgloszenieWfifo = kolejka.usun();
                                     iloscOdwiedzenSystemu++;
                                     indeksZgloszeniaWsystemie = 0;
@@ -395,7 +426,9 @@ namespace CentralaTelefoniczna
                                     liczbaKanSystem[indeksZgloszeniaWsystemie] = zgloszenieWfifo.iloscKanalowZwroc();
                                     czasWsystemie[indeksZgloszeniaWsystemie] = TimeSpan.FromMilliseconds(zgloszenieWfifo.czasTrwaniaZwroc()); ///sprawdzic
                                     czasPolaczenia[indeksZgloszeniaWsystemie] = zgloszenieWfifo.czasTrwaniaZwroc();//?
+                                    statystyki.zwiekszCzasObslugi(czasWsystemie[indeksZgloszeniaWsystemie]);
 
+                                    liczbaZgloszenNaWiazce++;
                                     liczbaKanalow_temp = liczbaKanalow_temp - zgloszenieWfifo.iloscKanalowZwroc();
                                 }
                                 else if (TimeSpan.FromMilliseconds(zgloszenieWfifo.maksCzasOczekiwaniaZwroc()) <= nastepnyEtap2)
@@ -447,8 +480,12 @@ namespace CentralaTelefoniczna
                 }
                 while(czasSymulacji >= aktualnyCzas);
 
-                statystyki.obliczPstwoOdrzucenia(liczbaZgloszen, liczbaOdrzuconych);
-                Console.WriteLine("{0} , {1}", liczbaOdrzuconych, st);
+              sredniaZajetoscWiazki = statystyki.zajetoscWiazkiZwroc(liczbaZgloszenNaWiazce);
+              sredniCzasObslugi = statystyki.sredniCzasObslugiZwroc();
+              sredniaZajetoscKolejki = statystyki.zajetoscKolejkiZwroc(iloscZgloszenWFifo);
+              statystyki.obliczPstwoOdrzucenia(liczbaZgloszen, liczbaOdrzuconych);
+              prawdopodobienstwoOdrzucenia = statystyki.pstwoOdrzuceniaZwroc();
+              zapisz();
             }
             //metoda wczytujaca dane z pliku
             public void wczytywanie()
@@ -456,183 +493,214 @@ namespace CentralaTelefoniczna
                 string[] wyrazy;
                 string linia = "";
 
-                Console.WriteLine("Podaj sciezke do pliku");
-                sciezka = Console.ReadLine();
-                if (sciezka[0] == '\"') sciezka = sciezka.Substring(1, sciezka.Length - 2);
-
-                StreamReader read;
-                read = new StreamReader(sciezka);
-                #region nazwa systemu
-                while (linia.Length < 2 || linia[0] == '#')
-                {
-                    linia = read.ReadLine();
-                }
-                wyrazy = linia.Split(' ');
-                if (wyrazy[0] != "SYSTEM" || wyrazy[2] == "")
-                    throw (new Exception("Zly format pliku :( "));
-                else
-                    nazwaSystemu = wyrazy[2];
-                #endregion
-
-                //nazwa juz jest wczytana
-
-                #region liczba Kanalow
-                linia = " ";
-                while (linia.Length < 2 || linia[0] == '#')
-                {
-                    linia = read.ReadLine();
-                }
-                wyrazy = linia.Split(' ');
-                if (wyrazy[0] != "KANALY" || wyrazy[2] == "")
-                    throw (new Exception("Zly format pliku :( "));
-                else
-                    liczbaKanalow = int.Parse(wyrazy[2]);
-                #endregion
-                //liczba kanalow tez już jest za nami
-                #region rozmiar kolejki
-                linia = " ";
-                while (linia.Length < 2 || linia[0] == '#')
-                {
-                    linia = read.ReadLine();
-                }
-                wyrazy = linia.Split(' ');
-                if (wyrazy[0] != "KOLEJKA" || wyrazy[2] == "")
-                    throw (new Exception("Zly format pliku :( "));
-                else
-                    rozmiarKolejki = int.Parse(wyrazy[2]);
-                #endregion
-                //rozmiar kolejki wczytany
-
-                #region ilosc rozkladow
-                linia = " ";
-                while (linia.Length < 2 || linia[0] == '#')
-                {
-                    linia = read.ReadLine();
-                }
-                wyrazy = linia.Split(' ');
-                if (wyrazy[0] != "ROZKLADY" || wyrazy[2] == "")
-                    throw (new Exception("Zly format pliku :( "));
-                else
-                    iloscRozkladow = int.Parse(wyrazy[2]);
-                #endregion
-
-                #region rozklady
-                nazwaRozkladu = new string[iloscRozkladow];
-                lambda = new double[iloscRozkladow];
-
-                //ilosc rozkladow wczytana
-                for (int i = 0; i < iloscRozkladow; i++)
+                try
                 {
 
+                    Console.WriteLine("Podaj sciezke do pliku z wynikami:");
+                    sciezkaWyjsciowa = Console.ReadLine();
+
+                    Console.WriteLine("Podaj sciezke do pliku");
+                    sciezkaWejsciowa = Console.ReadLine();
+                    if (sciezkaWejsciowa[0] == '\"') sciezkaWejsciowa = sciezkaWejsciowa.Substring(1, sciezkaWejsciowa.Length - 2);
+
+                    StreamReader read;
+                    read = new StreamReader(sciezkaWejsciowa);
+                    #region nazwa systemu
+                    while (linia.Length < 2 || linia[0] == '#')
+                    {
+                        linia = read.ReadLine();
+                    }
+                    wyrazy = linia.Split(' ');
+                    if (wyrazy[0] != "SYSTEM" || wyrazy[2] == "")
+                        throw (new Exception("Zly format pliku :( "));
+                    else
+                        nazwaSystemu = wyrazy[2];
+                    #endregion
+
+                    //nazwa juz jest wczytana
+
+                    #region liczba Kanalow
                     linia = " ";
                     while (linia.Length < 2 || linia[0] == '#')
                     {
                         linia = read.ReadLine();
                     }
                     wyrazy = linia.Split(' ');
-                    if (wyrazy[0] != "NAZWA" || wyrazy[2] == "")
+                    if (wyrazy[0] != "KANALY" || wyrazy[2] == "")
                         throw (new Exception("Zly format pliku :( "));
                     else
-                        nazwaRozkladu[i] = wyrazy[2];
-
-
+                        liczbaKanalow = int.Parse(wyrazy[2]);
+                    #endregion
+                    //liczba kanalow tez już jest za nami
+                    #region rozmiar kolejki
                     linia = " ";
                     while (linia.Length < 2 || linia[0] == '#')
                     {
                         linia = read.ReadLine();
                     }
                     wyrazy = linia.Split(' ');
-                    if (wyrazy[0] != "LAMBDA" || wyrazy[2] == "")
+                    if (wyrazy[0] != "KOLEJKA" || wyrazy[2] == "")
                         throw (new Exception("Zly format pliku :( "));
                     else
-                        lambda[i] = double.Parse(wyrazy[2]);
-                }
-                #endregion
-                //dane dotyczace rozkladow wczytane
+                        rozmiarKolejki = int.Parse(wyrazy[2]);
+                    #endregion
+                    //rozmiar kolejki wczytany
 
-                #region liczba strumieni
-                linia = " ";
-                while (linia.Length < 2 || linia[0] == '#')
-                {
-                    linia = read.ReadLine();
-                }
-                wyrazy = linia.Split(' ');
-                if (wyrazy[0] != "STRUMIENIE" || wyrazy[2] == "")
-                    throw (new Exception("Zly format pliku :( "));
-                else
-                    liczbaStrumieni = int.Parse(wyrazy[2]);
-                #endregion
-                //liczba strumieni wczytana
-
-                #region dane strumienia
-                nazwaStrumienia = new string[liczbaStrumieni];
-                liczbaKanalowZgloszenia = new int[liczbaStrumieni];
-                maxCzasOczekiwania = new double[liczbaStrumieni];
-                czasPolaczenia = new double[liczbaStrumieni];
-                czasPomiedzyZgloszeniami = new double[liczbaStrumieni];
-
-                for (int i = 0; i < liczbaStrumieni; i++)
-                {
+                    #region ilosc rozkladow
                     linia = " ";
                     while (linia.Length < 2 || linia[0] == '#')
                     {
                         linia = read.ReadLine();
                     }
                     wyrazy = linia.Split(' ');
-                    if (wyrazy[0] != "NAZWA" || wyrazy[2] == "")
+                    if (wyrazy[0] != "ROZKLADY" || wyrazy[2] == "")
                         throw (new Exception("Zly format pliku :( "));
                     else
+                        iloscRozkladow = int.Parse(wyrazy[2]);
+                    #endregion
+
+                    #region rozklady
+                    nazwaRozkladu = new string[iloscRozkladow];
+                    lambda = new double[iloscRozkladow];
+
+                    //ilosc rozkladow wczytana
+                    for (int i = 0; i < iloscRozkladow; i++)
                     {
-                        nazwaStrumienia[i] = wyrazy[2];
-                        liczbaKanalowZgloszenia[i] = int.Parse(wyrazy[5]);
-                        maxCzasOczekiwania[i] = double.Parse(wyrazy[8]);
 
-                        //czas polaczenia i czas odstepu maja przypisane na razie wartosci lambda,
-                        //dodac tu funkcje rozkladu, zwroc
-
-                        for (int j = 0; j < iloscRozkladow; j++)
+                        linia = " ";
+                        while (linia.Length < 2 || linia[0] == '#')
                         {
-                            if (nazwaRozkladu[j] == wyrazy[11])
-                                czasPolaczenia[i] = lambda[j];
+                            linia = read.ReadLine();
                         }
+                        wyrazy = linia.Split(' ');
+                        if (wyrazy[0] != "NAZWA" || wyrazy[2] == "")
+                            throw (new Exception("Zly format pliku :( "));
+                        else
+                            nazwaRozkladu[i] = wyrazy[2];
 
-                        for (int k = 0; k < iloscRozkladow; k++)
+
+                        linia = " ";
+                        while (linia.Length < 2 || linia[0] == '#')
                         {
-                            if (nazwaRozkladu[k] == wyrazy[14])
-                                czasPomiedzyZgloszeniami[i] = lambda[k];
+                            linia = read.ReadLine();
+                        }
+                        wyrazy = linia.Split(' ');
+                        if (wyrazy[0] != "LAMBDA" || wyrazy[2] == "")
+                            throw (new Exception("Zly format pliku :( "));
+                        else
+                            lambda[i] = double.Parse(wyrazy[2]);
+                    }
+                    #endregion
+                    //dane dotyczace rozkladow wczytane
 
+                    #region liczba strumieni
+                    linia = " ";
+                    while (linia.Length < 2 || linia[0] == '#')
+                    {
+                        linia = read.ReadLine();
+                    }
+                    wyrazy = linia.Split(' ');
+                    if (wyrazy[0] != "STRUMIENIE" || wyrazy[2] == "")
+                        throw (new Exception("Zly format pliku :( "));
+                    else
+                        liczbaStrumieni = int.Parse(wyrazy[2]);
+                    #endregion
+                    //liczba strumieni wczytana
+
+                    #region dane strumienia
+                    nazwaStrumienia = new string[liczbaStrumieni];
+                    liczbaKanalowZgloszenia = new int[liczbaStrumieni];
+                    maxCzasOczekiwania = new double[liczbaStrumieni];
+                    czasPolaczenia = new double[liczbaStrumieni];
+                    czasPomiedzyZgloszeniami = new double[liczbaStrumieni];
+                    lambdyPomocnicze1 = new double[liczbaStrumieni];
+                    lambdyPomocnicze2 = new double[liczbaStrumieni];
+
+                    for (int i = 0; i < liczbaStrumieni; i++)
+                    {
+                        linia = " ";
+                        while (linia.Length < 2 || linia[0] == '#')
+                        {
+                            linia = read.ReadLine();
+                        }
+                        wyrazy = linia.Split(' ');
+                        if (wyrazy[0] != "NAZWA" || wyrazy[2] == "")
+                            throw (new Exception("Zly format pliku :( "));
+                        else
+                        {
+                            nazwaStrumienia[i] = wyrazy[2];
+                            liczbaKanalowZgloszenia[i] = int.Parse(wyrazy[5]);
+                            maxCzasOczekiwania[i] = double.Parse(wyrazy[8]);
+
+                            //czas polaczenia i czas odstepu maja przypisane na razie wartosci lambda,
+
+
+                            for (int j = 0; j < iloscRozkladow; j++)
+                            {
+                                if (nazwaRozkladu[j] == wyrazy[11])
+                                {
+                                    czasPolaczenia[i] = lambda[j];
+                                    lambdyPomocnicze1[i] = lambda[j];
+                                }
+                            }
+
+                            for (int k = 0; k < iloscRozkladow; k++)
+                            {
+                                if (nazwaRozkladu[k] == wyrazy[14])
+                                {
+                                    czasPomiedzyZgloszeniami[i] = lambda[k];
+                                    lambdyPomocnicze2[i] = lambda[k];
+                                }
+
+                            }
                         }
                     }
-                }
 
-                #endregion
+                    #endregion
+                }
+                catch
+                {
+                    throw (new Exception("nie udalo sie wczytac sciezki wyjsciowej,albo wejsciowej :-("));
+                }
             }
             //metoda przypisujaca wartosci czasu polaczenia i odstepu miedzy zgloszeniami za pomoca rozkladow
             public void przypisanieRozkladow()
             {
                 Random random = new Random();
                 double y, z;
-                
-                for(int i =0; i < liczbaStrumieni; i++)
-                {
-                    czasPolaczenia[i] = lambda[i];
-                    czasPomiedzyZgloszeniami[i] = lambda[i];
-                    y = random.NextDouble();
-                    z = random.NextDouble();
-                    for(int j = 0; j < iloscRozkladow; j++)
+                    for (int i = 0; i < liczbaStrumieni; i++)
                     {
-                        if(czasPolaczenia[i] == lambda[j])
+                        czasPolaczenia[i] = lambdyPomocnicze1[i];
+                        czasPomiedzyZgloszeniami[i] = lambdyPomocnicze2[i];
+                        y = random.NextDouble();
+                        z = random.NextDouble();
+                        for (int j = 0; j < iloscRozkladow; j++)
                         {
-                            Rozklad rozklad1 = new Rozklad(lambda[j], nazwaRozkladu[j]);
-                            czasPolaczenia[i] = rozklad1.zwrocRozklad(y);
-                        }
-                        if(czasPomiedzyZgloszeniami[i] == lambda[j])
-                        {
-                            Rozklad rozklad2 = new Rozklad(lambda[j], nazwaRozkladu[j]);
-                            czasPomiedzyZgloszeniami[i] = rozklad2.zwrocRozklad(z);
+                            if (czasPolaczenia[i] == lambda[j])
+                            {
+                                Rozklad rozklad1 = new Rozklad(lambda[j], nazwaRozkladu[j]);
+                                czasPolaczenia[i] = rozklad1.zwrocRozklad(y);
+                            }
+                            if (czasPomiedzyZgloszeniami[i] == lambda[j])
+                            {
+                                Rozklad rozklad2 = new Rozklad(lambda[j], nazwaRozkladu[j]);
+                                czasPomiedzyZgloszeniami[i] = rozklad2.zwrocRozklad(z);
+                            }
                         }
                     }
-                }
+                
+                
+            }
+            //metoda zapisujaca dane do pliku
+            public void zapisz()
+            {
+                if (sciezkaWyjsciowa[0] == '\"') sciezkaWyjsciowa = sciezkaWyjsciowa.Substring(1, sciezkaWyjsciowa.Length - 2);
+                StreamWriter str = new StreamWriter(sciezkaWyjsciowa);
+                str.WriteLine("Srednia zajetosc lacza wynosi :" + (100 * sredniaZajetoscWiazki) + '%');
+                str.WriteLine("Srednia zajetosc kolejki :  " + (100 * sredniaZajetoscKolejki) + '%');
+                str.WriteLine("Prawdopodobienstwo odrzucenia zgloszenia  :  " + (100 * prawdopodobienstwoOdrzucenia) + '%');
+                str.WriteLine("Sredni czas obslugi  :  " + sredniCzasObslugi + "ms");
+                str.Close();
             }
         }
     }

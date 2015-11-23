@@ -4,7 +4,7 @@ SYSTEM = CENTRALA
 # liczba kanalow na laczu wyjsciowym K
 KANALY = 10
 # liczba miejsc w kolejce w centrali M
-KOLEJKA = 4
+KOLEJKA = 5
 
 # rozklady prawdopodobienstwa
 # na osi x mamy ms
